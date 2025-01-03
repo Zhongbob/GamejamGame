@@ -6,6 +6,7 @@ import TileMapConfig from '../types/TileMapConfig'
 import PlayerConfig from '../types/PlayerConfig'
 
 export default class MainScene extends Phaser.Scene {
+    private stop: boolean = false;
     public gameTileWidth: number;
     public gameTileHeight: number;
     public offsetX: number;
@@ -20,7 +21,9 @@ export default class MainScene extends Phaser.Scene {
     private keyS: Phaser.Input.Keyboard.Key;
     private keyD: Phaser.Input.Keyboard.Key;
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
-    private isMoving: boolean = false;
+    private isMoving: boolean[] = [];
+    private bgm: Phaser.Sound.BaseSound;
+    private triggeredWin: boolean = false;
 
     constructor(sceneName, size: { gameTileWidth: number, gameTileHeight: number }, TileMapConfig: TileMapConfig, playerConfigs: PlayerConfig[] = []) {
         super(sceneName);
@@ -32,15 +35,33 @@ export default class MainScene extends Phaser.Scene {
         this.offsetY = 0;
         this.tileMapConfig = TileMapConfig;
         this.playerConfigs = playerConfigs;
+        for (var i = 0; i < this.playerConfigs.length; i++) {
+            this.isMoving.push(false);
+        }
         this.levelNumber = parseInt(sceneName.slice(5));
 
     }
 
     preload() {
         // Load assets (e.g., player texture)
+        this.load.audio('game', 'assets/game.mp3');
         this.load.image('swap', 'assets/swap.png');
         this.load.image('swap_white', 'assets/swap_white.png');
         this.load.image('swap_black', 'assets/swap_black.png');
+        this.load.image('white_player', 'assets/white_player.png');
+        this.load.image('black_player', 'assets/black_player.png');
+        this.load.image('wall1', 'assets/wall.png');
+        this.load.image('wall2', 'assets/wall2.png');
+
+        this.load.spritesheet('arrow', 'assets/arrow.png',
+            { frameWidth: 32, frameHeight: 32 }
+        );
+        this.load.spritesheet('arrow_white', 'assets/arrow_white.png',
+            { frameWidth: 32, frameHeight: 32 }
+        );
+        this.load.spritesheet('arrow_black', 'assets/arrow_black.png',
+            { frameWidth: 32, frameHeight: 32 }
+        );
     }
 
     calculateOffsets() {
@@ -79,6 +100,34 @@ export default class MainScene extends Phaser.Scene {
         this.tilemap.swapColor();
     }
     create() {
+        this.createText(50, 50, `Level ${this.levelNumber}`, '24px');
+        this.createText(50, 100, 'Z to undo', '16px');
+        this.createText(50, 130, 'R to restart', '16px');
+
+        if (!this.registry.get('bgm')) {
+            // Add and play the BGM
+            this.bgm = this.sound.add('game', { loop: true });
+            this.bgm.play();
+            
+            // Add fade-in effect
+            this.tweens.add({
+                targets: this.bgm,
+                volume: {
+                    from: 0,
+                    to: 0.5
+                },
+                duration: 1000
+            });
+        
+            // Store BGM in the registry
+            this.registry.set('bgm', this.bgm);
+        }
+        
+        
+
+        for (var i = 0; i < this.playerConfigs.length; i++) {
+            this.isMoving[i] = false;
+        }
         // Calculate offsets before creating elements
         this.calculateOffsets();
 
@@ -106,10 +155,12 @@ export default class MainScene extends Phaser.Scene {
                 this.swapColor();
             }
             if (event.code === 'KeyZ') {
+                this.stop = false;
                 this.undo();
             }
             if (event.code === 'KeyR') {
-                this.lose();
+                this.stop = false
+                this.restart();
             }
         });
     }
@@ -120,70 +171,103 @@ export default class MainScene extends Phaser.Scene {
         }
         this.tilemap.undo();
     }
+    playerMovementHandler(){
+        for (const isMoving of this.isMoving) {
+            if (isMoving) {
+                return;
+            }
+        }
+        var moveX = 0;
+        var moveY = 0;
+        if (this.cursors.left.isDown || this.keyA.isDown) {
+            moveX = -1;
+        }
+        else if (this.cursors.right.isDown || this.keyD.isDown) {
+            moveX = 1;
+        }
+        else if (this.cursors.up.isDown || this.keyW.isDown) {
+            moveY = -1;
+        }
+        else if (this.cursors.down.isDown || this.keyS.isDown) {
+            moveY = 1;
+        }
+        else {
+            return;
+        }
+        for (var i = 0; i < this.players.length; i++) {
+            const player = this.players[i];
+            this.isMoving[i] = true;
+            player.move(moveX, moveY);
+        }
+        for (const player of this.players) {
+            player.wallHandler();
+        }
+        for (const player of this.players) {
+            player.lavaHandler();
+        }
+        for (const player of this.players) {
+            player.playerHandler(this.players);
+        }
+        for (const player of this.players) {
+            player.swapHandler();
+        }
+        for (var i = 0; i < this.players.length; i++) {
+            const player = this.players[i];
+            const curIter = i;
+            player.animateMove(()=>{
+                this.isMoving[curIter] = false
+            }, moveX, moveY);
+            player.completeHandling();
+        }
+
+
+    }
     update(time: number, delta: number) {
+        if (this.stop) return;
         for (const player of this.players) {
             player.update(time);
         }
-        const playerCoords: { [coord: string]: Player } = {};
-        for (const player of this.players) {
-            const coord = `${player.trueX},${player.trueY}`;
-            if (playerCoords[coord]) {
-                const otherPlayer = playerCoords[coord];
-
-                if (player.isWhite === otherPlayer.isWhite) {
-                    if (player.movementTween) {
-                        player.movementTween.stop();
-                        const prevMove = player.history[player.history.length - 1];
-                        player.undo(false);
-                        var moveX = 0;
-                        var moveY = 0;
-                        for (const direction of prevMove) {
-                            switch (direction) {
-                                case "up":
-                                    moveY = -1;
-                                    break;
-                                case "down":
-                                    moveY = 1;
-                                    break;
-                                case "left":
-                                    moveX = -1;
-                                    break;
-                                case "right":
-                                    moveX = 1;
-                                    break;
-                            }
-                        }
-                        player.knockback(moveX, moveY, time);
-                    }
-                    else {
-                        otherPlayer.movementTween.stop();
-                        otherPlayer.undo(false);
-                    }
-                }
-                else {
-                    // destroy the white player
-                    if (player.isWhite) {
-                        player.destroy();
-                        this.players = this.players.filter(p => p !== player);
-                    }
-                    else {
-                        otherPlayer.destroy();
-                        this.players = this.players.filter(p => p !== otherPlayer);
-                    }
-                }
-            }
-            else {
-                playerCoords[coord] = player;
+        this.playerMovementHandler();
+        var alive = 0;
+        for (const player of this.players){
+            if (!player.dead){
+                alive++;
             }
         }
-        if (this.players.length === 1) {
+        if (alive === 1){
             this.win();
         }
+
     }
     win() {
-        this.scene.start(`level${this.levelNumber + 1}`);
+        if (this.triggeredWin) return;
+        this.triggeredWin = true;
+        // Fade out the scene
+        this.cameras.main.fadeOut(1000, 0, 0, 0); // Fade out over 1 second to black
+    
+        // Wait for the fade-out to complete, then start the next scene
+        this.cameras.main.on('camerafadeoutcomplete', () => {
+            this.scene.start(`level${this.levelNumber + 1}`);
+        });
+    }
+    restart() {
+        this.scene.restart();
     }
     lose() {
-        this.scene.restart();
+        this.stop = true;
+    }
+    createText(x: number, y: number, content: string, fontSize: string = '16px', color: string = '#ffffff',center:boolean = false): Phaser.GameObjects.Text {
+        // Create text object
+        const text = this.add.text(x, y, content, {
+            fontFamily: '"Press Start 2P"',
+            fontSize: fontSize,
+            color: color,
+            align: 'center',
+        });
+    
+        // Center the text at the given position
+        if (center) text.setOrigin(0.5);
+    
+        return text;
     }
 }

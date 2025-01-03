@@ -14,9 +14,11 @@ export default class Player extends Sprite {
     private lastMoveTime: number = 0;
     public movementTween: Phaser.Tweens.Tween | undefined;
     private handled = false;
-    public dead = true
+    public dead = false;
+    private isBlocked: boolean = false;
+
     constructor(scene: MainScene, x: number, y: number, isWhite: boolean) {
-        super(scene, x, y, isWhite); // Initialize with placeholder position
+        super(scene, x, y, isWhite,{white:"white_player",black:"black_player"}); // Initialize with placeholder position
 
         // Assign control scheme
         this.keyW = scene.input.keyboard.addKey('W');
@@ -39,7 +41,7 @@ export default class Player extends Sprite {
         return { x: (x + maxX) % maxX, y: (y + maxY) % maxY };
     }
 
-    knockback(moveX: number, moveY: number, time: number) {
+    knockback(moveX: number, moveY: number, onComplete: ()=>void)  {
         if (!this.scene || !this.scene.tweens) return
         const mainScene = this.scene as MainScene; // Cast this.scene to MainScene
         const targetX = mainScene.offsetX + this.trueX * settings.gridSize + moveX * 10;
@@ -69,11 +71,9 @@ export default class Player extends Sprite {
                         this.setAngle(Phaser.Math.Between(-5, 5)); // Random rotation for shake
                     },
                     onComplete: () => {
-                        // Reset angle after shake
-                        this.isMoving = false;
-                        this.lastMoveTime = time
-                        this.setAngle(0);
-                    },
+                        onComplete()
+                        this.setAngle(0); // Reset rotation
+                    }
                 });
             },
         });
@@ -81,26 +81,25 @@ export default class Player extends Sprite {
     tileEventHandler(x: number, y: number, moveX: number, moveY: number, time: number): boolean {
         const mainScene = this.scene as MainScene; // Cast this.scene to MainScene
         const tile = mainScene.tilemap.getTile(x, y);
-    
+
         const direction = moveX === 1
             ? "right"
             : moveX === -1
-            ? "left"
-            : moveY === 1
-            ? "down"
-            : "up";
-    
+                ? "left"
+                : moveY === 1
+                    ? "down"
+                    : "up";
+
         if (!tile) {
             this.history.push([direction]);
             return false;
         }
-    
+
         const result = tile.onLand(this);
-    
+
         switch (result) {
             case "block":
                 this.history.push(["block"]);
-                this.knockback(moveX, moveY, time);
                 return true;
             case "kill":
                 this.history.push([direction]);
@@ -111,90 +110,101 @@ export default class Player extends Sprite {
                 this.swapColor(false);
                 break;
         }
-    
+
         return false; // Default return if no case matches
     }
-    move() {
-        if (!this.scene || this.dead) return 
-        let moveX = 0;
-        let moveY = 0;
-        const mainScene = this.scene as MainScene; // Cast this.scene to MainScene
-        if (this.keyW?.isDown) {
-            moveY = -1;
-        } else if (this.keyA?.isDown) {
-            moveX = -1;
-        } else if (this.keyS?.isDown) {
-            moveY = 1;
-        } else if (this.keyD?.isDown) {
-            moveX = 1;
-        }
+    move(moveX: number, moveY: number) {
+
+        if (!this.scene || this.dead) return
+        console.log(moveX, moveY)
+        const direction = moveX === 1
+            ? "right"
+            : moveX === -1
+                ? "left"
+                : moveY === 1
+                    ? "down"
+                    : "up";
         const { x: newX, y: newY } = this.wrapPosition(this.trueX + moveX, this.trueY + moveY);
         this.trueX = newX;
         this.trueY = newY;
+        this.history.push([direction]);
     }
 
-    animateMove(onComplete: () => void) {
-        if (!this.scene) return
+    animateMove(onComplete: () => void, moveX: number, moveY: number) {
+        if (!this.scene || this.dead) {
+            onComplete();
+            return;
+        }
         const mainScene = this.scene as MainScene; // Cast this.scene to MainScene
-        this.isMoving = true;
-        this.movementTween = this.scene.tweens.add({
-            targets: this,
-            x: mainScene.offsetX + this.trueX * settings.gridSize,
-            y: mainScene.offsetY + this.trueY * settings.gridSize,
-            duration: this.moveDelay,
-            onComplete
-        });
+        if (!this.isBlocked) {
+            this.movementTween = this.scene.tweens.add({
+                targets: this,
+                x: mainScene.offsetX + this.trueX * settings.gridSize,
+                y: mainScene.offsetY + this.trueY * settings.gridSize,
+                duration: this.moveDelay,
+                onComplete
+            });
+        }
+        else{
+            this.knockback(moveX, moveY, onComplete)
+            this.isBlocked = false
+        }
     }
     completeHandling() {
         this.handled = false
     }
 
-    wallHandler(){
+    wallHandler() {
         if (!this.scene || this.handled || this.dead) return
         const mainScene = this.scene as MainScene; // Cast this.scene to MainScene
         const currentTile = mainScene?.tilemap.getTile(this.trueX, this.trueY)
-        if (!currentTile) return 
-        if (currentTile.block(this)){
+        console.log(currentTile)
+        if (!currentTile) return
+
+        if (currentTile.block(this)) {
             this.handled = true
             this.undo(false)
             this.history.push(["block"])
+            this.isBlocked = true
         }
     }
 
-    playerHandler(players: Player[]){
+    playerHandler(players: Player[]) {
         if (!this.scene || this.handled || this.dead) return
         const mainScene = this.scene as MainScene; // Cast this.scene to MainScene
-        for (const player of players){
-            if (player.trueX === this.trueX && player.trueY === this.trueY && player !== this && !player.dead){
-                if (player.isWhite !== this.isWhite){
+        for (const player of players) {
+            if (player.trueX === this.trueX && player.trueY === this.trueY && player !== this && !player.dead) {
+                if (player.isWhite !== this.isWhite) {
                     const whitePlayer = this.isWhite ? this : player
                     whitePlayer.kill()
                 }
-                else{
+                else {
                     this.handled = true
                     this.undo(false)
-                    this.history[this.history.length - 1].push("block")
+                    this.history.push(["block"])
+                    this.isBlocked = true
                 }
             }
         }
     }
-    swapHandler(){
+    swapHandler() {
         if (!this.scene || this.handled || this.dead) return
         const mainScene = this.scene as MainScene; // Cast this.scene to MainScene
         const currentTile = mainScene?.tilemap.getTile(this.trueX, this.trueY)
-        if (!currentTile) return 
-        if (currentTile.swap(this)){
+        if (!currentTile) return
+        if (currentTile.swap(this)) {
             this.handled = true
+            this.swapColor(false)
             this.history[this.history.length - 1].push("swap")
         }
     }
 
-    lavaHandler(){
+    lavaHandler() {
         if (!this.scene || this.handled || this.dead) return
         const mainScene = this.scene as MainScene; // Cast this.scene to MainScene
         const currentTile = mainScene?.tilemap.getTile(this.trueX, this.trueY)
-        if (!currentTile) return 
-        if (currentTile.kill(this)){
+        if (!currentTile) return
+        if (currentTile.kill(this)) {
             this.handled = true
             this.history[this.history.length - 1].push("kill")
             mainScene.lose()
@@ -202,60 +212,6 @@ export default class Player extends Sprite {
     }
 
     update(time: number) {
-        // if (!this.scene || this.isMoving || time - this.lastMoveTime < this.moveDelay) {
-        //     return;
-        // }
-        // const mainScene = this.scene as MainScene; // Cast this.scene to MainScene
-        // let moveX = 0;
-        // let moveY = 0;
-
-        // // WASD controls
-        // if (this.keyW?.isDown) {
-        //     moveY = -1;
-        // } else if (this.keyA?.isDown) {
-        //     moveX = -1;
-        // } else if (this.keyS?.isDown) {
-        //     moveY = 1;
-        // } else if (this.keyD?.isDown) {
-        //     moveX = 1;
-        // }
-
-        // // Arrow key controls
-        // if (this.cursors?.up?.isDown) {
-        //     moveY = -1;
-        // } else if (this.cursors?.left?.isDown) {
-        //     moveX = -1;
-        // } else if (this.cursors?.down?.isDown) {
-        //     moveY = 1;
-        // } else if (this.cursors?.right?.isDown) {
-        //     moveX = 1;
-        // }
-        // if (moveX === 0 && moveY === 0) {
-        //     return;
-        // }
-
-        // const { x: newX, y: newY } = this.wrapPosition(this.trueX + moveX, this.trueY + moveY);
-        // // Check if the new position is a wall
-
-        // if (this.tileEventHandler(newX, newY, moveX, moveY, time)) {
-        //     return
-        // };
-
-        // this.trueX = newX;
-        // this.trueY = newY;
-        // this.isMoving = true;
-
-        // // Update the sprite's visual position based on logical position
-        // this.movementTween = this.scene.tweens.add({
-        //     targets: this,
-        //     x: mainScene.offsetX + this.trueX * settings.gridSize,
-        //     y: mainScene.offsetY + this.trueY * settings.gridSize,
-        //     duration: this.moveDelay,
-        //     onComplete: () => {
-        //         this.isMoving = false;
-        //         this.lastMoveTime = time;
-        //     },
-        // });
 
     }
 
@@ -267,15 +223,19 @@ export default class Player extends Sprite {
             "right": "left"
         }
         const mainScene = this.scene as MainScene; // Cast this.scene to MainScene
-        console.log(this.history)
         const prevMove = this.history.pop()
         if (!prevMove) return
         for (const move of prevMove) {
             const back = corresBack[move]
-            console.log(move,back)
             if (!back) {
-                if (move == "swap") {
-                    this.swapColor(false)
+                switch (move) {
+                    case "swap":
+                        this.swapColor(false)
+                        break;
+                    case "kill":
+                        this.dead = false;
+                        this.setAlpha(1)
+                        break;
                 }
                 continue
             }
@@ -317,7 +277,7 @@ export default class Player extends Sprite {
             }
         }
 
-        
+
     }
     kill() {
         if (!this.scene) return

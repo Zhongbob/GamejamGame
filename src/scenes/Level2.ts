@@ -60,4 +60,14 @@ export default class Level2 extends MainScene {
     constructor() {
         super('level2', size, tileMapConfig, playerConfigs);
     }
+
+    preload(): void {
+        super.preload();
+        this.load.image('space', 'assets/space.png');
+    }
+
+    create(){
+        super.create();
+        this.add.image(1280/2, 650, 'space');
+    }
 }

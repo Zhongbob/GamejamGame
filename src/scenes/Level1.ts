@@ -37,4 +37,9 @@ export default class Level1 extends MainScene {
     constructor() {
         super('level1', size, tileMapConfig, playerConfigs);
     }
+
+    create() {
+        super.create();
+        this.createText(1280/2, 600, 'WASD or Arrow Keys',"24px","white",true);
+    }
 }

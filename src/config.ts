@@ -10,7 +10,9 @@ import Level6 from './scenes/Level6';
 import Level7 from './scenes/Level7';
 import Level8 from './scenes/Level8';
 import Level9 from './scenes/Level9';
+import StartScene from './scenes/StartScene';
 const config: Phaser.Types.Core.GameConfig = {
+      
     type: Phaser.AUTO,
     width: 1280,
     height: 720,
@@ -21,7 +23,7 @@ const config: Phaser.Types.Core.GameConfig = {
         debug: true,
       },
     },
-    scene: [LevelEditor,Level7,Level1,Level2,Level3,Level4,Level6,Level5,Level8,Level9],
+    scene: [Level1,Level7,Level2,Level3,Level4,Level6,Level5,Level8,Level9],
   };
 
 export default config;

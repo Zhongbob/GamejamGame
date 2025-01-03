@@ -9,7 +9,8 @@ import Swap from './Swap'
 import { settings } from '../globals'
 import TileMapConfig from '../types/TileMapConfig'
 import ColorSwap from './ColorSwap'
-
+import Arrow from './Arrow'
+import ColorArrow from './ColorArrow'
 
 export default class TileMap {
     private scene: MainScene;
@@ -55,7 +56,16 @@ export default class TileMap {
                 this.tiles[swap.y][swap.x] = new ColorSwap(scene, swap.x, swap.y, swap.isWhite);
             }
         }
-
+        if (tileMapConfig.arrow){
+            for (let arrow of tileMapConfig.arrow) {
+                this.tiles[arrow.y][arrow.x] = new Arrow(scene, arrow.x, arrow.y, arrow.direction);
+            }
+        }
+        if (tileMapConfig.colorArrow){
+            for (let arrow of tileMapConfig.colorArrow) {
+                this.tiles[arrow.y][arrow.x] = new ColorArrow(scene, arrow.x, arrow.y, arrow.isWhite, arrow.direction);
+            }
+        }
     }
 
     
@@ -95,8 +105,26 @@ export default class TileMap {
             if (this.tiles[y][x] instanceof ColorSwap){
                 this.tiles[y][x].swapColor(false,true);
             }
+            else if (this.tiles[y][x] instanceof Arrow){
+                const arrow = this.tiles[y][x] as Arrow;
+                console.log(arrow)
+                arrow.rotate();
+            }
+            else if (this.tiles[y][x] instanceof ColorArrow){
+                const arrow = this.tiles[y][x] as ColorArrow;
+                if (arrow.isWhite){
+                    arrow.swapColor(false);
+                }
+                else{
+                    arrow.swapColor(false);
+                    arrow.rotate();
+                    arrow.rotate();
+                    arrow.rotate();
+
+                }
+            }
             else{
-                this.tiles[y][x].swapColor(false);6
+                this.tiles[y][x].swapColor(false);
             }
         }
     }
@@ -108,7 +136,9 @@ export default class TileMap {
             lava: [],
             colorLava: [],
             swap: [],
-            colorSwap: []
+            colorSwap: [],
+            arrow: [],
+            colorArrow: []
         }
         for (const row of this.tiles){
             for (const tile of row){
@@ -129,6 +159,14 @@ export default class TileMap {
                 }
                 else if (tile instanceof ColorSwap){
                     tileMapConfig.colorSwap.push({x: tile.trueX, y: tile.trueY, isWhite: tile.isWhite})
+                }
+                else if (tile instanceof Arrow){
+                    const arrow = tile as Arrow;
+                    tileMapConfig.arrow.push({x: arrow.trueX, y: arrow.trueY, direction: arrow.direction})
+                }
+                else if (tile instanceof ColorArrow){
+                    const arrow = tile as ColorArrow;
+                    tileMapConfig.colorArrow.push({x: arrow.trueX, y: arrow.trueY, direction: arrow.direction, isWhite: arrow.isWhite})
                 }
             }
         }

@@ -99,8 +99,8 @@ const playerConfigs: PlayerConfig[] = [
 
 const size = { gameTileWidth: 15, gameTileHeight: 15 };
 
-export default class Level10 extends MainScene {
+export default class Level11 extends MainScene {
     constructor() {
-        super('level10', size, tileMapConfig, playerConfigs)
+        super('level11', size, tileMapConfig, playerConfigs)
     }
 }

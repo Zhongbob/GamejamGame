@@ -19,15 +19,15 @@ export default class Sprite extends Phaser.GameObjects.Sprite {
         this.colors = colors?? this.colors;
         scene.add.existing(this);
         if (!isSprite) {
-            this.createTexture(scene);
+            this.createTexture();
         }
-        this.createSquare(scene);
+        this.createSquare();
         this.updateVisualPosition(scene);
         this.setOrigin(0, 0);
     }
-    private createTexture(scene: Phaser.Scene) {
+    createTexture() {
+        const scene = this.scene as MainScene;
         const colors = [this.colors.white, this.colors.black];
-    
         for (let i = 0; i < colors.length; i++) {
             const graphics = scene.add.graphics();
             const color = Number(colors[i]); // Ensure the color is a valid number
@@ -47,8 +47,8 @@ export default class Sprite extends Phaser.GameObjects.Sprite {
         }
     }
     
-    private createSquare(scene: Phaser.Scene) {
-        
+    createSquare() {
+        const scene = this.scene as MainScene;
         const graphics = scene.add.graphics();
 
         // Define the square's color based on the isWhite state
@@ -69,7 +69,7 @@ export default class Sprite extends Phaser.GameObjects.Sprite {
     }
     public swapColor(addToHistory:boolean = true): void {
         this.isWhite = !this.isWhite;
-        this.createSquare(this.scene);
+        this.createSquare();
         if (addToHistory) this.history.push(["swap"]);
     }
 
