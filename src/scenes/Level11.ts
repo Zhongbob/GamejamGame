@@ -90,14 +90,13 @@ const tileMapConfig: TileMapConfig = {
 }
 
 const playerConfigs: PlayerConfig[] = [
-    { x: 3, y: 3, isWhite: false },
-    { x: 3, y: 11, isWhite: true },
-    { x: 11, y: 11, isWhite: false },
-    { x: 11, y: 3, isWhite: true },
+    { x: 1, y: 2, isWhite: false },
+    { x: 1, y: 6, isWhite: false },
+
 ]
 
 
-const size = { gameTileWidth: 15, gameTileHeight: 15 };
+const size = { gameTileWidth: 3, gameTileHeight: 15 };
 
 export default class Level11 extends MainScene {
     constructor() {

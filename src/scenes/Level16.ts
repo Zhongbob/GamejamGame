@@ -3,7 +3,7 @@ import MainScene from './MainScene'
 import TileMapConfig from '../types/TileMapConfig'
 import PlayerConfig from '../types/PlayerConfig'
 
-const tileMapConfig: TileMapConfig = {
+const tileMapConfig: TileMapConfig ={
     "walls": [
         {
             "x": 0,
@@ -67,6 +67,14 @@ const tileMapConfig: TileMapConfig = {
         },
         {
             "x": 0,
+            "y": 1
+        },
+        {
+            "x": 14,
+            "y": 1
+        },
+        {
+            "x": 0,
             "y": 2
         },
         {
@@ -120,66 +128,153 @@ const tileMapConfig: TileMapConfig = {
         {
             "x": 14,
             "y": 2
+        },
+        {
+            "x": 7,
+            "y": 3
+        },
+        {
+            "x": 8,
+            "y": 3
+        },
+        {
+            "x": 7,
+            "y": 4
+        },
+        {
+            "x": 8,
+            "y": 4
+        },
+        {
+            "x": 8,
+            "y": 5
+        },
+        {
+            "x": 0,
+            "y": 6
+        },
+        {
+            "x": 1,
+            "y": 6
+        },
+        {
+            "x": 2,
+            "y": 6
+        },
+        {
+            "x": 3,
+            "y": 6
+        },
+        {
+            "x": 4,
+            "y": 6
+        },
+        {
+            "x": 5,
+            "y": 6
+        },
+        {
+            "x": 6,
+            "y": 6
+        },
+        {
+            "x": 7,
+            "y": 6
+        },
+        {
+            "x": 8,
+            "y": 6
+        },
+        {
+            "x": 9,
+            "y": 6
+        },
+        {
+            "x": 10,
+            "y": 6
+        },
+        {
+            "x": 11,
+            "y": 6
+        },
+        {
+            "x": 12,
+            "y": 6
+        },
+        {
+            "x": 13,
+            "y": 6
+        },
+        {
+            "x": 14,
+            "y": 6
         }
     ],
     "colorWalls": [
         {
-            "x": 8,
-            "y": 3,
-            "isWhite": true
-        },
-        {
-            "x": 8,
-            "y": 4,
-            "isWhite": true
-        },
-        {
-            "x": 8,
+            "x": 6,
             "y": 5,
-            "isWhite": true
+            "isWhite": false
         },
         {
-            "x": 8,
-            "y": 6,
+            "x": 7,
+            "y": 5,
             "isWhite": true
         }
     ],
     "lava": [
         {
-            "x": 0,
-            "y": 1
+            "x": 6,
+            "y": 3
         },
         {
-            "x": 14,
-            "y": 1
+            "x": 6,
+            "y": 4
         }
     ],
-    "colorLava": [
-        {
-            "x": 13,
-            "y": 1,
-            "isWhite": false
-        }
-    ],
+    "colorLava": [],
     "swap": [],
     "colorSwap": [],
     "arrow": [
         {
-            "x": 12,
-            "y": 1,
+            "x": 13,
+            "y": 2,
+            "direction": "down"
+        },
+        {
+            "x": 0,
+            "y": 3,
             "direction": "right"
         },
         {
-            "x": 13,
-            "y": 2,
-            "direction": "up"
+            "x": 0,
+            "y": 4,
+            "direction": "right"
+        },
+        {
+            "x": 0,
+            "y": 5,
+            "direction": "right"
+        },
+        {
+            "x": 4,
+            "y": 5,
+            "direction": "right"
+        },
+        {
+            "x": 5,
+            "y": 5,
+            "direction": "right"
         }
-    ]
+    ],
+    "colorArrow": []
 }
-
 const playerConfigs: PlayerConfig[] = [
-    { x: 11, y: 6, isWhite: false },
-    { x: 5, y: 2, isWhite: true },
+    { x: 1, y: 1, isWhite: false },
+    { x: 1, y: 5, isWhite: true },
+    { x: 3, y: 3, isWhite: true },
+    { x: 3, y: 4, isWhite: true },
+    { x: 2, y: 4, isWhite: true },
 ]
 
 

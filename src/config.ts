@@ -36,7 +36,7 @@ const config: Phaser.Types.Core.GameConfig = {
         debug: false,
       },
     },
-    scene: [StartScene,LevelSelectionScene ,WinScene,Level5,Level1,Level7,Level2,Level3,Level4,Level6,Level8,Level9,Level10,Level11,Level12,Level13,Level14,Level15,Level16,Level17,Level18,Level19,Level20
+    scene: [StartScene,LevelSelectionScene,Level16,Level15,Level14,Level11 ,WinScene,Level5,Level1,Level7,Level2,Level3,Level4,Level6,Level8,Level9,Level10,Level12,Level13,Level17,Level18,Level19,Level20
     ],
   };
 

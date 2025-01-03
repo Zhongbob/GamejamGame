@@ -178,8 +178,8 @@ const tileMapConfig: TileMapConfig = {
 }
 
 const playerConfigs: PlayerConfig[] = [
-    { x: 11, y: 6, isWhite: false },
-    { x: 5, y: 2, isWhite: true },
+    { x: 5, y: 3, isWhite: false },
+    { x: 5, y: 1, isWhite: true },
 ]
 
 

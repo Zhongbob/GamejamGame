@@ -23,10 +23,6 @@ module.exports = {
         extensions: ['.ts', '.js'],
     },
     plugins: [
-        // Automatically inject the bundle.js into index.html
-        new HtmlWebpackPlugin({
-            template: './public/index.html', // Use the `index.html` from `/public`
-        }),
         // Copy everything from the `/public` folder except index.html
         new CopyWebpackPlugin({
             patterns: [

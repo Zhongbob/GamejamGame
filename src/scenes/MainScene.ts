@@ -210,9 +210,12 @@ export default class MainScene extends Phaser.Scene {
         for (const player of this.players) {
             player.lavaHandler();
         }
-        for (const player of this.players) {
-            player.playerHandler(this.players);
+        for (var i = 0; i < this.players.length; i++) {
+            for (const player of this.players) {
+                player.playerHandler(this.players);
+            }
         }
+        
         for (const player of this.players) {
             player.swapHandler();
         }

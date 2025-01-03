@@ -162,7 +162,7 @@ export default class Level20 extends MainScene {
     
         // Wait for the fade-out to complete, then start the next scene
         this.cameras.main.on('camerafadeoutcomplete', () => {
-            this.scene.start(`WinScene`);
+            this.scene.start(`Win`);
         });
     }
 }
