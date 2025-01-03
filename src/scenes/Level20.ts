@@ -154,4 +154,15 @@ export default class Level20 extends MainScene {
     constructor() {
         super('level20', size, tileMapConfig, playerConfigs)
     }
+    win() {
+        if (this.triggeredWin) return;
+        this.triggeredWin = true;
+        // Fade out the scene
+        this.cameras.main.fadeOut(1000, 0, 0, 0); // Fade out over 1 second to black
+    
+        // Wait for the fade-out to complete, then start the next scene
+        this.cameras.main.on('camerafadeoutcomplete', () => {
+            this.scene.start(`WinScene`);
+        });
+    }
 }

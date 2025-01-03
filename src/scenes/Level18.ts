@@ -3,7 +3,7 @@ import MainScene from './MainScene'
 import TileMapConfig from '../types/TileMapConfig'
 import PlayerConfig from '../types/PlayerConfig'
 
-const tileMapConfig: TileMapConfig = const tileMapConfig: TileMapConfig ={
+const tileMapConfig:  TileMapConfig ={
     "walls": [
         {
             "x": 10,

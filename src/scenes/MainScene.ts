@@ -6,6 +6,7 @@ import TileMapConfig from '../types/TileMapConfig'
 import PlayerConfig from '../types/PlayerConfig'
 
 export default class MainScene extends Phaser.Scene {
+    private deathMessage: Phaser.GameObjects.Text;
     private stop: boolean = false;
     public gameTileWidth: number;
     public gameTileHeight: number;
@@ -23,7 +24,7 @@ export default class MainScene extends Phaser.Scene {
     private cursors: Phaser.Types.Input.Keyboard.CursorKeys;
     private isMoving: boolean[] = [];
     private bgm: Phaser.Sound.BaseSound;
-    private triggeredWin: boolean = false;
+    public triggeredWin: boolean = false;
 
     constructor(sceneName, size: { gameTileWidth: number, gameTileHeight: number }, TileMapConfig: TileMapConfig, playerConfigs: PlayerConfig[] = []) {
         super(sceneName);
@@ -155,17 +156,21 @@ export default class MainScene extends Phaser.Scene {
                 this.swapColor();
             }
             if (event.code === 'KeyZ') {
-                this.stop = false;
+
                 this.undo();
             }
             if (event.code === 'KeyR') {
-                this.stop = false
                 this.restart();
             }
         });
     }
 
     undo() {
+        if (this.deathMessage) {
+            this.deathMessage.destroy();
+        }
+        this.stop = false;
+
         for (const player of this.players) {
             player.undo();
         }
@@ -251,11 +256,37 @@ export default class MainScene extends Phaser.Scene {
         });
     }
     restart() {
+        this.stop = false;
+
         this.scene.restart();
     }
     lose() {
         this.stop = true;
+    
+        // Delay for a few seconds before displaying the message
+        setTimeout(() => {
+            const message = this.add.text(
+                this.scale.width / 2, // Center horizontally
+                this.scale.height - 50, // Near the bottom of the screen
+                'You died! Press Z to undo or R to restart level',
+                {
+                    fontFamily: '"Press Start 2P"',
+                    fontSize: '16px',
+                    color: '#ff0000', // Reddish text color
+                    align: 'center',
+                }
+            ).setOrigin(0.5).setAlpha(0); // Initially transparent
+            this.deathMessage = message;
+            // Fade in the message
+            this.tweens.add({
+                targets: message,
+                alpha: 1, // Fade to fully visible
+                duration: 1000, // 1-second fade-in
+                ease: 'Power2',
+            });
+        }, 500); // Delay of 3 seconds after dying
     }
+    
     createText(x: number, y: number, content: string, fontSize: string = '16px', color: string = '#ffffff',center:boolean = false): Phaser.GameObjects.Text {
         // Create text object
         const text = this.add.text(x, y, content, {

@@ -80,7 +80,7 @@ export default class StartScene extends Phaser.Scene {
         });
 
         levelSelectButton.on('pointerup', () => {
-            this.fadeOutSceneAndMusic('LevelSelectScene'); // Transition to LevelSelectScene
+            this.fadeOutSceneAndMusic('LevelSelectionScene'); // Transition to LevelSelectScene
         });
 
         // Button hover effect

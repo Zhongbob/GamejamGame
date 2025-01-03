@@ -207,6 +207,7 @@ export default class Player extends Sprite {
         if (currentTile.kill(this)) {
             this.handled = true
             this.history[this.history.length - 1].push("kill")
+            this.setAlpha(0)
             mainScene.lose()
         }
     }
